@@ -13,7 +13,7 @@
 #include <bsd/vis.h>
 
 int
-prog2(int argc, char * fname)
+prog2(char * fname)
 {
 	int i, fd;
 	Elf *e;
@@ -22,9 +22,6 @@ prog2(int argc, char * fname)
 	GElf_Ehdr ehdr;
 
   
-	/* if (argc != 2) */
-	/* 	errx (EXIT_FAILURE, " usage : %s file - name ", argv [0]); */
-
 	if (elf_version (EV_CURRENT) == EV_NONE)
 		errx (EXIT_FAILURE, " ELF  library   initialization  "
 		      " failed : %s", elf_errmsg (-1));
