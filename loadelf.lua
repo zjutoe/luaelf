@@ -25,8 +25,9 @@ local shdr_num = libshdr.shdr_num(ffi.new('char[13]', './libshdr.so'))
 print('shdr_num: ', shdr_num)
 local shdrs = libshdr.get_shdr(ffi.new('char[13]', './libshdr.so'), shdr_num)
 
+-- so here we've got the section headers
 for i=0, shdr_num do
-   print(shdrs[i].sh_name)
+   print(shdrs[i].sh_name, shdrs[i].sh_type, shdrs[i].sh_addr, shdrs[i].sh_offset)
 end
 
 

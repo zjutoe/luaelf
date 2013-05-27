@@ -99,12 +99,12 @@ shdr_t* get_shdr(char *fname, int num)
 		buf[i].sh_offset = shdr.sh_offset;
 		i++;
 				
-		if (( name = elf_strptr (e, shstrndx , shdr.sh_name ))
-		    == NULL )
-			errx ( EXIT_FAILURE , " elf_strptr ()  failed : %s.",
-			       elf_errmsg ( -1));
-		( void ) printf (" Section  %-4.4jd %s %d\n", ( uintmax_t )
-				 elf_ndxscn (scn), name, shdr.sh_name);
+		// if (( name = elf_strptr (e, shstrndx , shdr.sh_name ))
+		//     == NULL )
+		// 	errx ( EXIT_FAILURE , " elf_strptr ()  failed : %s.",
+		// 	       elf_errmsg ( -1));
+		// ( void ) printf (" Section  %-4.4jd %s %d\n", ( uintmax_t )
+		// 		 elf_ndxscn (scn), name, shdr.sh_name);
 	}
 
 
