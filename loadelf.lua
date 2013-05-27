@@ -1,13 +1,33 @@
 local ffi = require 'ffi'
 
+-- ffi.cdef[[
+-- 	    int get_shdr(char * fname);
+-- ]]
+
 ffi.cdef[[
-	    int get_shdr(char * fname);
+      typedef struct _shdr_t {
+	 uint32_t sh_name;
+	 uint32_t sh_type;	
+	 uint64_t sh_addr;
+	 uint64_t sh_offset;
+      } shdr_t;
+
+      int shdr_num(char* fname);
+      shdr_t* get_shdr(char* fname, int num);
 ]]
+
+--ffi.include 'libshdr.h'
 
 ffi.load('elf', true)
 ffi.load('bsd', true)
 libshdr = ffi.load('./libshdr.so')
-libshdr.get_shdr(ffi.new('char[13]', './libshdr.so'))
+local shdr_num = libshdr.shdr_num(ffi.new('char[13]', './libshdr.so'))
+print('shdr_num: ', shdr_num)
+local shdrs = libshdr.get_shdr(ffi.new('char[13]', './libshdr.so'), shdr_num)
+
+for i=0, shdr_num do
+   print(shdrs[i].sh_name)
+end
 
 
 function load_file(fname) 
