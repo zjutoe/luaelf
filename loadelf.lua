@@ -1,5 +1,28 @@
 local ffi = require 'ffi'
 
+function ld_scn(fname, shdr)
+   local offset = shdr.sh_offset
+   local addr = shdr.sh_addr
+
+   local f = assert(io.open(fname, "rb"))
+   local block = 64
+   local mem = {}
+   f:seek('set', offset)
+   while true do
+      local bytes = f:read(block)
+      if not bytes then break end
+      for _, b in pairs{string.byte(bytes, 1, -1)} do
+	 --io.write(string.format("%02X ", b))
+	 mem[addr] = b
+	 addr = addr + 1
+      end
+      --io.write(string.rep(" ", block - string.len(bytes)))
+      --io.write(" ", string.gsub(bytes, "%c", "."), "\n")
+   end
+   
+end
+
+
 -- ffi.cdef[[
 -- 	    int get_shdr(char * fname);
 -- ]]
@@ -25,10 +48,24 @@ local shdr_num = libshdr.shdr_num(ffi.new('char[13]', './libshdr.so'))
 print('shdr_num: ', shdr_num)
 local shdrs = libshdr.get_shdr(ffi.new('char[13]', './libshdr.so'), shdr_num)
 
+
+
 -- so here we've got the section headers
 for i=0, shdr_num do
-   print(shdrs[i].sh_name, shdrs[i].sh_type, shdrs[i].sh_addr, shdrs[i].sh_offset)
+   -- print(shdrs[i].sh_name, shdrs[i].sh_type, shdrs[i].sh_addr, shdrs[i].sh_offset)
+   local m = ld_scn('./libshdr.so', shdrs[i])
+
+   for addr=0, #m do
+      io.write(string.format("%02X ", m[addr]))
+      -- addr = addr + 1
+      if addr % 32 == 0 then
+         io.write("\n")
+      end
+   end
+   io.write("\n")   
 end
+
+
 
 
 function load_file(fname) 
