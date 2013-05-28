@@ -21,15 +21,10 @@ ffi.cdef[[
       shdr_t* get_shdr(char* fname, int num);
 ]]
 
---ffi.include 'libshdr.h'
-
 
 ffi.load('elf', true)
 ffi.load('bsd', true)
 libshdr = ffi.load('./libshdr.so')
-local shdr_num = libshdr.shdr_num(ffi.new('char[13]', './libshdr.so'))
-print('shdr_num: ', shdr_num)
-local shdrs = libshdr.get_shdr(ffi.new('char[13]', './libshdr.so'), shdr_num)
 
 function ld_scn(fname, shdr)
    local f = assert(io.open(fname, "rb"))
@@ -64,30 +59,37 @@ function ld_scn(fname, shdr)
 end
 
 
--- so here we've got the section headers
-for i=0, shdr_num do
-   local h = shdrs[i]
-   local m = ld_scn('./libshdr.so', h)
-   print(string.format("Section %2d addr %4X offset %4X size %4X", 
-		       tonumber(h.sh_idx), 
-		       tonumber(h.sh_addr), 
-		       tonumber(h.sh_offset),
-		       tonumber(h.sh_size)
+function loadelf()
+   local fname = ffi.new(string.format("char[%d]", string.len(arg[1])+1), arg[1])		
+   local shdr_num = libshdr.shdr_num(fname)
+   print('shdr_num: ', shdr_num)
+   local shdrs = libshdr.get_shdr(fname, shdr_num)
+
+   for i=0, shdr_num do
+      local h = shdrs[i]
+      local m = ld_scn('./libshdr.so', h)
+      print(string.format("Section %2d addr %4X offset %4X size %4X", 
+			  tonumber(h.sh_idx), 
+			  tonumber(h.sh_addr), 
+			  tonumber(h.sh_offset),
+			  tonumber(h.sh_size)
 		    ))
 
-   local buf = m.buf
-   io.write(string.format("\n%06X: ", m.addr))
-   if buf then
-      for i, v in ipairs(buf) do
-	 if (m.addr + i - 1) % 16 == 0 then
-	    io.write(string.format("\n%06X: ", m.addr+i-1))
+      local buf = m.buf
+      io.write(string.format("\n%06X: ", m.addr))
+      if buf then
+	 for i, v in ipairs(buf) do
+	    if (m.addr + i - 1) % 16 == 0 then
+	       io.write(string.format("\n%06X: ", m.addr+i-1))
+	    end
+	    io.write(string.format("%02X ", v))
 	 end
-	 io.write(string.format("%02X ", v))
+	 io.write("\n")
       end
-      io.write("\n")
    end
 end
 
+loadelf()
 
 
 
