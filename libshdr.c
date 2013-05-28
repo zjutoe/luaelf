@@ -27,7 +27,7 @@ int shdr_num(char *fname)
 		      " failed : %s", elf_errmsg (-1));
 
 	if ((fd = open (fname, O_RDONLY, 0)) < 0)
-		err (EXIT_FAILURE, " open  \"% s\"  failed ", fname);
+		err (EXIT_FAILURE, " open  \"%s\"  failed ", fname);
 
 	if ((e = elf_begin (fd, ELF_C_READ, NULL)) == NULL)
 		errx (EXIT_FAILURE, " elf_begin ()  failed : %s.",
@@ -93,16 +93,27 @@ shdr_t* get_shdr(char *fname, int num)
 			errx ( EXIT_FAILURE , " getshdr ()  failed : %s.",
 			       elf_errmsg ( -1));
 
+		buf[i].sh_idx    = elf_ndxscn(scn);
 		buf[i].sh_name   = shdr.sh_name;
 		buf[i].sh_type   = shdr.sh_type;
+		buf[i].sh_flags  = shdr.sh_flags;
 		buf[i].sh_addr   = shdr.sh_addr;
 		buf[i].sh_offset = shdr.sh_offset;
-		i++;
+		buf[i].sh_size   = shdr.sh_size;
+		buf[i].sh_link   = shdr.sh_link;
+		buf[i].sh_info   = shdr.sh_info;
+		buf[i].sh_addralign = shdr.sh_addralign;
+		buf[i].sh_entsize   = shdr.sh_entsize;
 				
-		// if (( name = elf_strptr (e, shstrndx , shdr.sh_name ))
-		//     == NULL )
-		// 	errx ( EXIT_FAILURE , " elf_strptr ()  failed : %s.",
-		// 	       elf_errmsg ( -1));
+		/* if (( name = elf_strptr (e, shstrndx , shdr.sh_name )) */
+		/*     == NULL ) */
+		/* 	errx ( EXIT_FAILURE , " elf_strptr ()  failed : %s.", */
+		/* 	       elf_errmsg ( -1)); */
+
+		/* buf[i].sh_name_str = name; */
+
+		i++;
+
 		// ( void ) printf (" Section  %-4.4jd %s %d\n", ( uintmax_t )
 		// 		 elf_ndxscn (scn), name, shdr.sh_name);
 	}

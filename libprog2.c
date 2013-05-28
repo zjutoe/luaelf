@@ -27,7 +27,7 @@ prog2(char * fname)
 		      " failed : %s", elf_errmsg (-1));
 
 	if ((fd = open (fname, O_RDONLY, 0)) < 0)
-		err (EXIT_FAILURE, " open  \"% s\"  failed ", fname);
+		err (EXIT_FAILURE, " open  \"%s\"  failed ", fname);
 
 	if ((e = elf_begin (fd, ELF_C_READ, NULL)) == NULL)
 		errx (EXIT_FAILURE, " elf_begin ()  failed : %s.",
@@ -60,7 +60,7 @@ prog2(char * fname)
 
 	(void) printf ("\n");
 
-#define PRINT_FMT "    % -20s 0x%jx\n"
+#define PRINT_FMT "    %-20s 0x%jx\n"
 
 #define PRINT_FIELD(N) do {						\
 		(void) printf (PRINT_FMT, #N, (uintmax_t) ehdr.N);	\
