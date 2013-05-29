@@ -1,7 +1,9 @@
 /*
- * Print the names of ELF sections .
+ * Load sections of ELF
+ * Author: Zju Toe <zjutoe@gmail.com>
  *
- * $Id: prog4 .txt 2133 2011 -11 -10 08:28:22 Z jkoshy $
+ * Referenced code snippets in "libelf by example"
+ * http://sourceforge.net/projects/elftoolchain/files/Documentation/libelf-by-example/
  */
 #include <err.h>
 #include <fcntl.h>
