@@ -2,29 +2,19 @@ local ffi = require 'ffi'
 
 
 ffi.cdef[[
-      typedef struct _shdr_t {
-	uint32_t sh_idx;
-	uint32_t sh_name; /* Section name (index into the section header
-			     string table). */
-	uint32_t sh_type;
-	uint64_t sh_flags;
-	uint64_t sh_addr;
-	uint64_t sh_offset;
-	uint64_t sh_size;
-	uint32_t sh_link;
-	uint32_t sh_info;
-	uint64_t sh_addralign;
-	uint64_t sh_entsize;
-      } shdr_t;
-
-      int shdr_num(char* fname);
-      shdr_t* get_shdr(char* fname, int num);
+      int init(char* fname);
+      void fini();
+      int get_scns();
+      uint8_t* get_scn_data(int scn_idx);
+      size_t get_scn_size(int scn_idx);
+      int get_scn_num();
 ]]
 
 
 ffi.load('elf', true)
 ffi.load('bsd', true)
 libshdr = ffi.load('./libshdr.so')
+
 
 function ld_scn(fname, shdr)
    local f = assert(io.open(fname, "rb"))
@@ -60,7 +50,29 @@ end
 
 
 function loadelf()
-   local fname = ffi.new(string.format("char[%d]", string.len(arg[1])+1), arg[1])		
+
+   local fname = ffi.new(string.format("char[%d]", string.len(arg[1])+1), arg[1])
+
+   libshdr.init(fname);
+   libshdr.get_scns();
+   local n = tonumber(libshdr.get_scn_num());
+   for idx=0, n do      
+      local d = libshdr.get_scn_data(idx);
+      local sz = tonumber(libshdr.get_scn_size(idx));
+      print('section: ', idx, 'size: ', sz)
+      for i=0, sz-1 do 
+	 if i % 16 == 0 then
+	    io.write("\n")
+	 end
+	 io.write(string.format("%02X ", d[i]))
+      end
+
+      io.write("\n")
+   end
+   
+
+   do return end;
+
    local shdr_num = libshdr.shdr_num(fname)
    print('shdr_num: ', shdr_num)
    local shdrs = libshdr.get_shdr(fname, shdr_num)
