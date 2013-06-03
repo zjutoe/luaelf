@@ -34,13 +34,13 @@ static int init_scns()
 	size_t shdrnum = g.shdrnum;
 
 	int i = 0;
-	Elf_Scn *scn = NULL;
 	GElf_Shdr shdr;
 	Elf_Scn** buf = (Elf_Scn**)malloc(shdrnum * sizeof(Elf_Scn*));
 	if (buf == NULL) {
 		errx (EXIT_FAILURE , "malloc failed");
 		return -1;
 	}
+	Elf_Scn *scn = NULL;
 	while ((scn = elf_nextscn(e, scn)) != NULL && i < shdrnum) {
 		if (gelf_getshdr (scn , & shdr ) != & shdr) {
 			errx ( EXIT_FAILURE , " getshdr ()  failed : %s.",
@@ -209,7 +209,7 @@ size_t get_scn_size(int idx)
 	return shdr.sh_size;
 }
 
-scn_hdr_t* get_scn_data(int idx)
+scn_hdr_t* get_scn_hdr(int idx)
 {
 	Elf_Scn* scn = g.scns[idx];
 
