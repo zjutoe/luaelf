@@ -21,19 +21,20 @@ typedef struct {
 } scn_hdr_t;
 
 typedef struct {
-	uint32_t p_idx;
-	uint32_t p_offset;
-	uint32_t p_vaddr;
+	uint64_t p_idx;
+	uint64_t p_offset;
+	uint64_t p_vaddr;
 	uint64_t p_paddr;
 	uint64_t p_filesz;
 	uint64_t p_memsz;
 	uint64_t p_flags;
-	uint32_t p_align;
+	uint64_t p_align;
 } prog_hdr_t;
 
       int init(char* fname);
       void fini();
       int get_scn_num();
+      int get_seg_num();
       size_t get_scn_size(int idx);
       scn_hdr_t* get_scn_hdr(int idx);
       prog_hdr_t* get_prog_hdr(int idx);
@@ -136,16 +137,23 @@ function load_scns()
 end
 
 function load_segs()
-   local n = libshdr.phdrnum
+   local n = libshdr.get_seg_num()
+   print(n, "segments")
    for i=0, n do
       local ph = libshdr.get_prog_hdr(i)
-      print(string.format("off %X  vaddr %X  paddr %X  filesz  %X", 
-			  p_offset, p_vaddr, p_paddr, p_filesz))
+      print(string.format("    idx %x off %X va %X pa %X fsz %X msz %X", 
+			  tonumber(ph.p_idx),
+			  tonumber(ph.p_offset),
+			  tonumber(ph.p_vaddr),
+			  tonumber(ph.p_paddr),
+			  tonumber(ph.p_filesz),
+			  tonumber(ph.p_memsz)
+			 ))
    end
 end
 
 load_scns()
-local_segs()
+load_segs()
 
 
 -- function load_file(fname) 
