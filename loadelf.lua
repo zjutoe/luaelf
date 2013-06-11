@@ -1,5 +1,7 @@
 local ffi = require 'ffi'
 
+-- TODO shall we distinguish 32 bit and 64 bit machines?
+
 ffi.cdef[[
 
 typedef struct {
@@ -18,11 +20,23 @@ typedef struct {
         char* name;
 } scn_hdr_t;
 
+typedef struct {
+	uint32_t p_idx;
+	uint32_t p_offset;
+	uint32_t p_vaddr;
+	uint64_t p_paddr;
+	uint64_t p_filesz;
+	uint64_t p_memsz;
+	uint64_t p_flags;
+	uint32_t p_align;
+} prog_hdr_t;
+
       int init(char* fname);
       void fini();
       int get_scn_num();
       size_t get_scn_size(int idx);
       scn_hdr_t* get_scn_hdr(int idx);
+      prog_hdr_t* get_prog_hdr(int idx);
 ]]
 
 
@@ -62,12 +76,15 @@ libshdr = ffi.load('./libshdr.so')
 --    return mem
 -- end
 
+function init_elf(fname)
+   libshdr.init(fname)
+end
 
 function load_scns()
 
    local fname = ffi.new(string.format("char[%d]", string.len(arg[1])+1), arg[1])
-
    libshdr.init(fname)
+
    local n = tonumber(libshdr.get_scn_num())
    local scns = {}
    for idx=0, n-2 do
@@ -118,8 +135,17 @@ function load_scns()
    -- end
 end
 
-load_scns()
+function load_segs()
+   local n = libshdr.phdrnum
+   for i=0, n do
+      local ph = libshdr.get_prog_hdr(i)
+      print(string.format("off %X  vaddr %X  paddr %X  filesz  %X", 
+			  p_offset, p_vaddr, p_paddr, p_filesz))
+   end
+end
 
+load_scns()
+local_segs()
 
 
 -- function load_file(fname) 

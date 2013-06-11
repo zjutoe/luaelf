@@ -202,6 +202,20 @@ size_t get_scn_size(int idx)
 	return shdr.sh_size;
 }
 
+prog_hdr_t* get_prog_hdr(int idx)
+{
+	GElf_Phdr* h = g.phdrs[idx];
+	prog_hdr_t* ph = (prog_hdr_t*)malloc(sizeof(prog_hdr_t));
+
+	ph->p_idx    = idx;
+	ph->p_offset = h->p_offset;
+	ph->p_vaddr  = h->p_vaddr;
+	ph->p_padrr  = h->p_paddr;
+	ph->p_filesz = h->p_filesz;
+	ph->p_memsz  = h->p_memsz;
+	ph->p_align  = h->p_align;
+}
+
 scn_hdr_t* get_scn_hdr(int idx)
 {
 	Elf_Scn* scn = g.scns[idx];
@@ -225,7 +239,7 @@ scn_hdr_t* get_scn_hdr(int idx)
 
 	uint8_t* buf = (uint8_t*) malloc(shdr.sh_size);
 	if (buf == NULL) {		
-		errx (EXIT_FAILURE , "malloc failed");
+		errx (EXIT_FAILURE, "malloc failed");
 		return NULL;
 	}
 

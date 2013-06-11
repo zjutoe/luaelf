@@ -17,5 +17,17 @@ typedef struct {
 	char* name;
 } scn_hdr_t;
 
+
+typedef struct {
+	uint64_t p_idx;
+	uint64_t p_offset;
+	uint64_t p_vaddr;
+	uint64_t p_paddr;
+	uint64_t p_filesz;
+	uint64_t p_memsz;
+	uint64_t p_flags;
+	uint64_t p_align;
+} prog_hdr_t;
+
 #endif	/* _LIBSHDR_H */
 
