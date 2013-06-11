@@ -39,11 +39,11 @@ static int init_phdrs()
 	}
 
 	int i;
-	for (i=0; i<phd_rnum; i++) {
+	for (i=0; i<phdr_num; i++) {
 		//GElf_Phdr* phdr = (GElf_Phdr*) malloc(sizeof(GElf_Phdr));
 		GElf_Phdr* phdr = buf + i;
 		if (gelf_getphdr (e, i, phdr) != phdr) {
-			errx(EX_SOFTWARE, " gelf_getphdr() failed : %s.",
+			errx(EXIT_FAILURE, " gelf_getphdr() failed : %s.",
 			       elf_errmsg(-1));
 		}
 	}
