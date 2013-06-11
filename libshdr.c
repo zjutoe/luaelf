@@ -25,7 +25,32 @@ static struct {
 	size_t phdrnum;
 	size_t shstrndx;
 	Elf_Scn** scns;
+	GElf_Phdr* phdrs;
 } g;
+
+static int init_phdrs()
+{
+	Elf* e = g.e;
+	size_t phdr_num = g.phdrnum;
+	GElf_Phdr* buf = (GElf_Phdr*) malloc(phdr_num * sizeof(GElf_Phdr));
+	if (buf == NULL) {
+		errx (EXIT_FAILURE , "malloc failed with GElf_Phdr*");
+		return -1;
+	}
+
+	int i;
+	for (i=0; i<phd_rnum; i++) {
+		//GElf_Phdr* phdr = (GElf_Phdr*) malloc(sizeof(GElf_Phdr));
+		GElf_Phdr* phdr = buf + i;
+		if (gelf_getphdr (e, i, phdr) != phdr) {
+			errx(EX_SOFTWARE, " gelf_getphdr() failed : %s.",
+			       elf_errmsg(-1));
+		}
+	}
+
+	g.phdrs = buf;
+	return 0;
+}
 
 static int init_scns()
 {
@@ -42,6 +67,7 @@ static int init_scns()
 	}
 	Elf_Scn *scn = NULL;
 	while ((scn = elf_nextscn(e, scn)) != NULL && i < shdrnum) {
+		// FIXME seems this step is unnecessary? 
 		if (gelf_getshdr (scn , & shdr ) != & shdr) {
 			errx ( EXIT_FAILURE , " getshdr ()  failed : %s.",
 			       elf_errmsg ( -1));
@@ -54,6 +80,11 @@ static int init_scns()
 
 	g.scns = buf;
 	
+	return 0;
+}
+
+static int init_segs()
+{
 	return 0;
 }
 
@@ -133,6 +164,7 @@ int init(char* fname)
 	g.phdrnum = n;
 
 	init_scns();
+	init_phdrs();
 
 	return 0;
 }
@@ -140,7 +172,13 @@ int init(char* fname)
 
 void fini()
 {
+	free(g.phdrs);
+
+	int i;
+	for (i=0; i<g.shdrnum; i++)
+		free(g.scns[i]);
 	free(g.scns);
+
 	elf_end(g.e);
 	close(g.fd);
 }

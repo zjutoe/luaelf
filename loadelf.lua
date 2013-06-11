@@ -30,37 +30,37 @@ ffi.load('elf', true)
 ffi.load('bsd', true)
 libshdr = ffi.load('./libshdr.so')
 
-function ld_scn(fname, shdr)
-   local f = assert(io.open(fname, "rb"))
+-- function ld_scn(fname, shdr)
+--    local f = assert(io.open(fname, "rb"))
 
-   local offset = tonumber(shdr.sh_offset)   
-   f:seek('set', offset)
+--    local offset = tonumber(shdr.sh_offset)   
+--    f:seek('set', offset)
 
-   local buf = {}
-   while true do
-      -- local bytes = f:read(tonumber(shdr.sh_size))      
-      local bytes = f:read(2048)
-      if not bytes then break end
+--    local buf = {}
+--    while true do
+--       -- local bytes = f:read(tonumber(shdr.sh_size))      
+--       local bytes = f:read(2048)
+--       if not bytes then break end
       
-      for _, b in pairs{string.byte(bytes, 1, -1)} do
-	 buf[#buf + 1] = b
-      end
-   end
+--       for _, b in pairs{string.byte(bytes, 1, -1)} do
+-- 	 buf[#buf + 1] = b
+--       end
+--    end
 
-   -- local buf = {}
-   -- --if not bytes then break end
-   --  for _, b in pairs{string.byte(bytes, 1, -1)} do
-   --     buf[#buf + 1] = b
-   --  end
-   -- --end   
+--    -- local buf = {}
+--    -- --if not bytes then break end
+--    --  for _, b in pairs{string.byte(bytes, 1, -1)} do
+--    --     buf[#buf + 1] = b
+--    --  end
+--    -- --end   
 
-   local mem = {}
-   mem.buf = buf
-   local addr = tonumber(shdr.sh_addr)
-   mem.addr = addr
+--    local mem = {}
+--    mem.buf = buf
+--    local addr = tonumber(shdr.sh_addr)
+--    mem.addr = addr
 
-   return mem
-end
+--    return mem
+-- end
 
 
 function load_scns()
