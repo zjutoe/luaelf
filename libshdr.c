@@ -30,7 +30,7 @@ static struct {
 static int init_scns()
 {
 	Elf* e = g.e;
-	size_t shstrndx = g.shstrndx;
+	//size_t shstrndx = g.shstrndx;
 	size_t shdrnum = g.shdrnum;
 
 	int i = 0;
@@ -144,51 +144,6 @@ void fini()
 	elf_end(g.e);
 	close(g.fd);
 }
-
-
-// int shdr_num(char *fname)
-// {
-// 	int i, fd;
-// 	Elf *e;
-// 	char *id, bytes[5];
-// 	size_t n;
-// 	GElf_Ehdr ehdr;
-
-// 	if (elf_version (EV_CURRENT) == EV_NONE)
-// 		errx (EXIT_FAILURE, " ELF  library   initialization  "
-// 		      " failed : %s", elf_errmsg (-1));
-
-// 	if ((fd = open (fname, O_RDONLY, 0)) < 0)
-// 		err (EXIT_FAILURE, " open  \"%s\"  failed ", fname);
-
-// 	if ((e = elf_begin (fd, ELF_C_READ, NULL)) == NULL)
-// 		errx (EXIT_FAILURE, " elf_begin ()  failed : %s.",
-// 		      elf_errmsg (-1));
-
-// 	if (elf_kind (e) != ELF_K_ELF)
-// 		errx (EXIT_FAILURE, " \"%s\" is  not an  ELF  object .",
-// 		      fname);
-
-// 	if (gelf_getehdr (e, &ehdr) == NULL)
-// 		errx (EXIT_FAILURE, " getehdr ()  failed : %s.",
-// 		      elf_errmsg (-1));
-
-// 	if ((i = gelf_getclass (e)) == ELFCLASSNONE)
-// 		errx (EXIT_FAILURE, " getclass ()  failed : %s.",
-// 		      elf_errmsg (-1));
-
-// 	/* if ((id = elf_getident (e, NULL)) == NULL) */
-// 	/* 	errx (EXIT_FAILURE, " getident ()  failed : %s.", */
-// 	/* 	      elf_errmsg (-1)); */
-
-// 	if (elf_getshdrnum (e, &n) != 0)
-// 		errx (EXIT_FAILURE, " getshdrnum ()  failed : %s.",
-// 		      elf_errmsg (-1));
-
-// 	elf_end (e);
-// 	close (fd);	
-// 	return n;
-// }
 
 
 int get_scn_num()
