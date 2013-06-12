@@ -220,6 +220,7 @@ prog_hdr_t* get_prog_hdr(int idx)
 	ph->p_paddr  = h->p_paddr;
 	ph->p_filesz = h->p_filesz;
 	ph->p_memsz  = h->p_memsz;
+	ph->p_flags  = h->p_flags;
 	ph->p_align  = h->p_align;
 
 	return ph;
