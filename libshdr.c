@@ -211,9 +211,9 @@ prog_hdr_t* get_prog_hdr(int idx)
 {
 	GElf_Phdr* h = g.phdrs + idx;
 	prog_hdr_t* ph = (prog_hdr_t*)malloc(sizeof(prog_hdr_t));
-	printf("[D] idx %x off %x va %x pa %x fsz %x msz %x\n",
-	       idx, h->p_offset, h->p_vaddr, h->p_paddr, h->p_filesz,
-	       h->p_memsz);
+	// printf("[D] idx %x off %x va %x pa %x fsz %x msz %x\n",
+	//        idx, h->p_offset, h->p_vaddr, h->p_paddr, h->p_filesz,
+	//        h->p_memsz);
 	ph->p_idx    = idx;
 	ph->p_offset = h->p_offset;
 	ph->p_vaddr  = h->p_vaddr;
