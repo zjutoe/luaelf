@@ -79,10 +79,11 @@ end
 
 function load_segs()
    local n = libshdr.get_seg_num()
-   print(n, "segments")
+   print("segments:")
+   print("idx   offset  virtual physical filesize  memsize")
    for i=0, n do
       local ph = libshdr.get_prog_hdr(i)
-      print(string.format("    idx %x off %X va %X pa %X fsz %X msz %X", 
+      print(string.format("%3x %08X %08X %08X %08X %08X", 
 			  tonumber(ph.p_idx),
 			  tonumber(ph.p_offset),
 			  tonumber(ph.p_vaddr),
