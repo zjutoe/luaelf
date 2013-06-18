@@ -19,6 +19,7 @@ typedef struct {
 
 
 typedef struct {
+	uint64_t p_type;
 	uint64_t p_idx;
 	uint64_t p_offset;
 	uint64_t p_vaddr;

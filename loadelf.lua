@@ -4,32 +4,33 @@ local ffi = require 'ffi'
 
 ffi.cdef[[
 
-typedef struct {
-	uint32_t sh_idx;
-	uint32_t sh_name;
-	uint32_t sh_type;
-	uint64_t sh_flags;
-	uint64_t sh_addr;
-	uint64_t sh_offset;
-	uint64_t sh_size;
-	uint32_t sh_link;
-	uint32_t sh_info;
-	uint64_t sh_addralign;
-	uint64_t sh_entsize;
-	uint8_t* data;
-        char* name;
-} scn_hdr_t;
+      typedef struct {
+	 uint32_t sh_idx;
+	 uint32_t sh_name;
+	 uint32_t sh_type;
+	 uint64_t sh_flags;
+	 uint64_t sh_addr;
+	 uint64_t sh_offset;
+	 uint64_t sh_size;
+	 uint32_t sh_link;
+	 uint32_t sh_info;
+	 uint64_t sh_addralign;
+	 uint64_t sh_entsize;
+	 uint8_t* data;
+	 char* name;
+      } scn_hdr_t;
 
-typedef struct {
-	uint64_t p_idx;
-	uint64_t p_offset;
-	uint64_t p_vaddr;
-	uint64_t p_paddr;
-	uint64_t p_filesz;
-	uint64_t p_memsz;
-	uint64_t p_flags;
-	uint64_t p_align;
-} prog_hdr_t;
+      typedef struct {
+	 uint64_t p_type;
+	 uint64_t p_idx;
+	 uint64_t p_offset;
+	 uint64_t p_vaddr;
+	 uint64_t p_paddr;
+	 uint64_t p_filesz;
+	 uint64_t p_memsz;
+	 uint64_t p_flags;
+	 uint64_t p_align;
+      } prog_hdr_t;
 
       int init(char* fname);
       void fini();
@@ -38,6 +39,7 @@ typedef struct {
       size_t get_scn_size(int idx);
       scn_hdr_t* get_scn_hdr(int idx);
       prog_hdr_t* get_prog_hdr(int idx);
+
 ]]
 
 
@@ -96,7 +98,110 @@ function load_segs()
    end
 end
 
+local PTYPE = {
+    PT_NULL=0,
+    PT_LOAD=1,
+    PT_DYNAMIC=2,
+    PT_INTERP=3,
+    PT_NOTE=4,
+    PT_SHLIB=5,
+    PT_PHDR=6,
+    PT_TLS=7,
+    PT_LOPROC=0x70000000,
+    PT_HIPROC=0x7fffffff,
+    PT_GNU_EH_FRAME=0x6474e550,
+    PT_GNU_STACK=0x6474e551,
+    PT_GNU_RELRO=0x6474e552,
+    PT_ARM_ARCHEXT=0x70000000,
+    PT_ARM_EXIDX=0x70000001,
+    PT_ARM_UNWIND=0x70000001,
+    PT_AARCH64_ARCHEXT=0x70000000,
+    PT_AARCH64_UNWIND=0x70000001,
+}
+
+local STYPE = {
+    SHT_NULL=0,
+    SHT_PROGBITS=1,
+    SHT_SYMTAB=2,
+    SHT_STRTAB=3,
+    SHT_RELA=4,
+    SHT_HASH=5,
+    SHT_DYNAMIC=6,
+    SHT_NOTE=7,
+    SHT_NOBITS=8,
+    SHT_REL=9,
+    SHT_SHLIB=10,
+    SHT_DYNSYM=11,
+    SHT_INIT_ARRAY=14,
+    SHT_FINI_ARRAY=15,
+    SHT_PREINIT_ARRAY=16,
+    SHT_GROUP=17,
+    SHT_SYMTAB_SHNDX=18,
+    SHT_NUM=19,
+    SHT_LOOS=0x60000000,
+    SHT_GNU_HASH=0x6ffffff6,
+    SHT_GNU_verdef=0x6ffffffd,  -- also SHT_SUNW_verdef
+    SHT_GNU_verneed=0x6ffffffe, -- also SHT_SUNW_verneed
+    SHT_GNU_versym=0x6fffffff,  -- also SHT_SUNW_versym
+    SHT_LOPROC=0x70000000,
+    SHT_HIPROC=0x7fffffff,
+    SHT_LOUSER=0x80000000,
+    SHT_HIUSER=0xffffffff,
+    SHT_AMD64_UNWIND=0x70000001,
+    SHT_SUNW_syminfo=0x6ffffffc,
+    SHT_ARM_EXIDX=0x70000001,
+    SHT_ARM_PREEMPTMAP=0x70000002,
+    SHT_ARM_ATTRIBUTES=0x70000003,
+    SHT_ARM_DEBUGOVERLAY=0x70000004,
+}
+
+local SH_FLAGS = {
+    SHF_WRITE=0x1,
+    SHF_ALLOC=0x2,
+    SHF_EXECINSTR=0x4,
+    SHF_MERGE=0x10,
+    SHF_STRINGS=0x20,
+    SHF_INFO_LINK=0x40,
+    SHF_LINK_ORDER=0x80,
+    SHF_OS_NONCONFORMING=0x100,
+    SHF_GROUP=0x200,
+    SHF_TLS=0x400,
+    SHF_MASKOS=0x0ff00000,
+    SHF_EXCLUDE=0x80000000,
+    SHF_MASKPROC=0xf0000000,
+}
+
 function scn_in_seg(scn, seg)
+   local strict   = true
+   local segtype  = seg.p_type
+   local sectype  = scn.sh_type
+   local secflags = scn.sh_flags
+   local secoff   = scn.sh_offset
+   local segoff   = seg.p_offset
+   local segfsize= seg.p_filesz
+
+   --Only PT_LOAD, PT_GNU_RELRO and PT_TLS segments can contain
+   --SHF_TLS sections
+   local cond1 = ( bit.band(secflags, SH_FLAGS.SHF_TLS) ~= 0 
+		and ( segtype == PTYPE.PT_TLS or
+		      segtype == PTYPE.PT_LOAD or
+		      segtype == PTYPE.PT_GNU_RELRO))
+
+   --PT_TLS segment contains only SHF_TLS sections, PT_PHDR no
+   --sections at all.
+   local cond2 = ( bit.band(secflags, SH_FLAGS.SHF_TLS) == 0 
+		and segtype ~= PTYPE.PT_TLS
+		and segtype ~= PTYPE.PT_PHDR )
+
+   if not(cond1 or cond2) then return false end
+
+   local cond3 = ( sectype == STYPE.SHT_NOBITS or
+		   ( secoff >= segoff and
+		     ( (not strict) or secoff - segoff <= segfsize - 1) and
+		  ( secoff - segoff + elf_section_size(scn, seg) <= segfsize)))
+	       
+   if not cond3 then return false end   
+      
    
 end
 
