@@ -171,14 +171,24 @@ local SH_FLAGS = {
     SHF_MASKPROC=0xf0000000,
 }
 
+function elf_section_size(scn, seg)
+   return 0 			-- FIXME
+end
+
 function scn_in_seg(scn, seg)
-   local strict   = true
+   local strict    = true
+   local check_vma = true
+
    local segtype  = seg.p_type
    local sectype  = scn.sh_type
    local secflags = scn.sh_flags
    local secoff   = scn.sh_offset
    local segoff   = seg.p_offset
-   local segfsize= seg.p_filesz
+   local secaddr  = scn.sh_addr
+   local segaddr  = seg.p_vaddr
+   local segfsize = seg.p_filesz
+   local segmsize = seg.p_memsz
+   local secsize  = scn.sh_size
 
    --Only PT_LOAD, PT_GNU_RELRO and PT_TLS segments can contain
    --SHF_TLS sections
@@ -195,6 +205,8 @@ function scn_in_seg(scn, seg)
 
    if not(cond1 or cond2) then return false end
 
+   -- Any section besides one of type SHT_NOBITS must have file
+   -- offsets within the segment.
    local cond3 = ( sectype == STYPE.SHT_NOBITS or
 		   ( secoff >= segoff and
 		     ( (not strict) or secoff - segoff <= segfsize - 1) and
@@ -202,7 +214,28 @@ function scn_in_seg(scn, seg)
 	       
    if not cond3 then return false end   
       
-   
+
+   -- SHF_ALLOC sections must have VMAs within the segment.
+   local cond4 = ( (not check_vma) or
+		   (bit.band(secflags, SH_FLAGS.SHF_ALLOC) == 0) or
+		   (secaddr >= segaddr and
+		      ((not strict) or secaddr - segaddr <= segmsize - 1) and
+		      (secaddr - segaddr + slf_section_size(scn, seg) <= segmsize)) )
+		 
+   if not cond4 then return false end
+
+   -- No zero size sections at start or end of PT_DYNAMIC.
+   local cond5 = (segtype ~= PTYPE.PT_DYNAMIC or 
+		  secsize ~= 0 or
+		  segmsize == 0 or
+		  ((sectype == STYPE.SHT_NOBITS or
+		    (secoff > segoff and secoff - segoff < segfsize)) and
+		   (bit.band(secflags, SH_FLAGS.SHF_ALLOC) == 0 or
+		   (secaddr > segaddr and secaddr - segaddr < segmsize))))
+
+   if not cond5 then return false end
+
+   return true
 end
 
 load_scns()
