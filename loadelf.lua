@@ -65,7 +65,7 @@ function load_scns()
       scns[#scns + 1] = scn_hdr
       print(string.format('%d     %s 0x%x 0x%x', 
       			  idx,
-      			  tostring(scn_hdr.name), 
+      			  ffi.string(scn_hdr.name), 
 			  tonumber(scn_hdr.sh_addr),
       			  tonumber(scn_hdr.sh_size)))
       local sz = tonumber(scn_hdr.sh_size)

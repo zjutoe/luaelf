@@ -291,6 +291,7 @@ scn_hdr_t* get_scn_hdr(int idx)
 	if ((name = elf_strptr(g.e, g.shstrndx, shdr.sh_name)) == NULL)
 	  errx(EXIT_FAILURE , " elf_strptr()  failed : %s.",
 	       elf_errmsg (-1));
+	
 
 	scn_hdr_t* scn_hdr_p = (scn_hdr_t*)malloc(sizeof(scn_hdr_t));
 	if (scn_hdr_p == NULL) {
