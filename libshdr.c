@@ -80,7 +80,8 @@ static int init_scns()
 		buf2[i] = shdr;
 		i++;
 	}
-
+	// printf("[D] No. of sections:%d\n", i-1);
+	
 	g.scns  = buf;
 	g.shdrs = buf2;
 	

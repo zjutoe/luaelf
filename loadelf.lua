@@ -59,7 +59,8 @@ function load_scns()
 
    local n = tonumber(libshdr.get_scn_num())
    local scns = {}
-   for idx=0, n-2 do
+   for idx=0, n-2 do		-- FIXME I think the extra section is
+				-- .strtab (string table
       local scn_hdr = libshdr.get_scn_hdr(idx)
       scns[#scns + 1] = scn_hdr
       print(string.format('section %d of %d, %s size 0x%x', 
