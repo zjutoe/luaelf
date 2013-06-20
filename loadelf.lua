@@ -59,13 +59,14 @@ function load_scns()
 
    local n = tonumber(libshdr.get_scn_num())
    local scns = {}
-   for idx=0, n-2 do		-- FIXME I think the extra section is
-				-- .strtab (string table
+   print("Index name addr size")
+   for idx=0, n-1 do
       local scn_hdr = libshdr.get_scn_hdr(idx)
       scns[#scns + 1] = scn_hdr
-      print(string.format('section %d of %d, %s size 0x%x', 
-      			  idx, n,
+      print(string.format('%d     %s 0x%x 0x%x', 
+      			  idx,
       			  tostring(scn_hdr.name), 
+			  tonumber(scn_hdr.sh_addr),
       			  tonumber(scn_hdr.sh_size)))
       local sz = tonumber(scn_hdr.sh_size)
       -- for i=0, sz-1 do 
@@ -272,10 +273,10 @@ local scns = load_scns()
 local segs = load_segs()
 
 for i=0, libshdr.get_seg_num()-1 do
-   io.write(string.format("%d: ", i+1))
+   io.write(string.format("%d: ", i))
    for j=0, libshdr.get_scn_num()-1 do
       if tonumber(libshdr.sec_in_seg_strict(j, i)) == 1 then
-	 io.write(string.format("%d, ", j+1))
+	 io.write(string.format("%d, ", j))
       end
    end
    print("")

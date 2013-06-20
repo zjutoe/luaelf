@@ -56,7 +56,7 @@ static int init_phdrs()
 static int init_scns()
 {
 	Elf* e = g.e;
-	//size_t shstrndx = g.shstrndx;
+	size_t shstrndx = g.shstrndx;
 	size_t shdrnum = g.shdrnum;
 
 	int i = 0;
@@ -80,6 +80,23 @@ static int init_scns()
 		buf2[i] = shdr;
 		i++;
 	}
+
+	if (i < shdrnum) {
+	  /* the .shstrtab section*/
+	  /* size_t shstrndx; */
+	  /* if (elf_getshdrstrndx (e, &shstrndx) != 0) */
+	  /*   errx (EXIT_FAILURE, " getshdrstrndx ()  failed : %s.", */
+	  /* 	  elf_errmsg (-1)); */
+	  if ((scn = elf_getscn (e, shstrndx)) == NULL )
+	    errx ( EXIT_FAILURE , " getscn ()  failed : %s.",
+		   elf_errmsg ( -1));
+	  if (gelf_getshdr(scn , &shdr) != & shdr )
+	    errx ( EXIT_FAILURE , " getshdr ( shstrndx )  failed : %s.",
+		   elf_errmsg ( -1));
+	  buf[i] = scn;
+	  buf2[i] = shdr;
+	}
+
 	// printf("[D] No. of sections:%d\n", i-1);
 	
 	g.scns  = buf;
@@ -96,7 +113,6 @@ static int init_segs()
 int init(char* fname)
 {
 	char *id, bytes[5];
-
 
 	if (elf_version (EV_CURRENT) == EV_NONE) {
 		errx (EXIT_FAILURE, " ELF  library   initialization  "
@@ -271,11 +287,10 @@ scn_hdr_t* get_scn_hdr(int idx)
 	}
 
 	// get the name string
-	// char* name;
-	// if ((name = elf_strptr(g.e, g.shstrndx, shdr.sh_name))
-	//     == NULL)
-	// 	errx(EXIT_FAILURE , " elf_strptr()  failed : %s.",
-	// 	       elf_errmsg ( -1));
+	char* name;
+	if ((name = elf_strptr(g.e, g.shstrndx, shdr.sh_name)) == NULL)
+	  errx(EXIT_FAILURE , " elf_strptr()  failed : %s.",
+	       elf_errmsg (-1));
 
 	scn_hdr_t* scn_hdr_p = (scn_hdr_t*)malloc(sizeof(scn_hdr_t));
 	if (scn_hdr_p == NULL) {
@@ -284,7 +299,8 @@ scn_hdr_t* get_scn_hdr(int idx)
 	}
 
 	scn_hdr_p->sh_idx = idx;
-	//scn_hdr_p->name = name;
+	scn_hdr_p->name = name;
+	scn_hdr_p->sh_addr = shdr.sh_addr;
 	scn_hdr_p->sh_size = n;
 	scn_hdr_p->data = buf;
 
