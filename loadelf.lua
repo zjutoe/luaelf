@@ -39,6 +39,7 @@ ffi.cdef[[
       size_t get_scn_size(int idx);
       scn_hdr_t* get_scn_hdr(int idx);
       prog_hdr_t* get_prog_hdr(int idx);
+      int sec_in_seg_strict(int sec_hdr_idx, int seg_hdr_idx);
 
 ]]
 
@@ -66,14 +67,14 @@ function load_scns()
       			  tostring(scn_hdr.name), 
       			  tonumber(scn_hdr.sh_size)))
       local sz = tonumber(scn_hdr.sh_size)
-      for i=0, sz-1 do 
-      	 if i % 16 == 0 then
-      	    io.write("\n")
-      	 end
-      	 io.write(string.format("%02x ", tonumber(scn_hdr.data[i])))
-	 if i > 128 then break end
-      end
-      io.write("\n")
+      -- for i=0, sz-1 do 
+      -- 	 if i % 16 == 0 then
+      -- 	    io.write("\n")
+      -- 	 end
+      -- 	 io.write(string.format("%02x ", tonumber(scn_hdr.data[i])))
+      -- 	 if i > 128 then break end
+      -- end
+      -- io.write("\n")
    end  
 
    return scns
@@ -81,10 +82,12 @@ end
 
 function load_segs()
    local n = libshdr.get_seg_num()
+   local segs = {}
    print("segments:")
    print("idx   offset  virtual physical filesize  memsize Flg Align")
    for i=0, n-1 do
       local ph = libshdr.get_prog_hdr(i)
+      segs[#segs+1] = ph
       print(string.format("%3x %08x %08x %08x %08x %08x %3x %x", 
 			  tonumber(ph.p_idx),
 			  tonumber(ph.p_offset),
@@ -94,8 +97,10 @@ function load_segs()
 			  tonumber(ph.p_memsz),
 			  tonumber(ph.p_flags),
 			  tonumber(ph.p_align)
-			 ))
+		    ))
    end
+
+   return segs
 end
 
 local PTYPE = {
@@ -172,23 +177,30 @@ local SH_FLAGS = {
 }
 
 function elf_section_size(scn, seg)
-   return 0 			-- FIXME
+   local elf_tbss_special = (bit.band(tonumber(scn.sh_flags), SH_FLAGS.SHF_TLS) ~= 0) and
+                            (tonumber(scn.sh_type) == STYPE.SHT_NOBITS) and
+			    (tonumber(seg.p_tpye) ~= PTYPE.PT_TLS)			 
+   if elf_tbss_special then
+      return 0
+   end
+
+   return scn.sh_size
 end
 
 function scn_in_seg(scn, seg)
    local strict    = true
    local check_vma = true
 
-   local segtype  = seg.p_type
-   local sectype  = scn.sh_type
-   local secflags = scn.sh_flags
-   local secoff   = scn.sh_offset
-   local segoff   = seg.p_offset
-   local secaddr  = scn.sh_addr
-   local segaddr  = seg.p_vaddr
-   local segfsize = seg.p_filesz
-   local segmsize = seg.p_memsz
-   local secsize  = scn.sh_size
+   local segtype  = tonumber(seg.p_type)
+   local sectype  = tonumber(scn.sh_type)
+   local secflags = tonumber(scn.sh_flags)
+   local secoff   = tonumber(scn.sh_offset)
+   local segoff   = tonumber(seg.p_offset)
+   local secaddr  = tonumber(scn.sh_addr)
+   local segaddr  = tonumber(seg.p_vaddr)
+   local segfsize = tonumber(seg.p_filesz)
+   local segmsize = tonumber(seg.p_memsz)
+   local secsize  = tonumber(scn.sh_size)
 
    --Only PT_LOAD, PT_GNU_RELRO and PT_TLS segments can contain
    --SHF_TLS sections
@@ -205,24 +217,39 @@ function scn_in_seg(scn, seg)
 
    if not(cond1 or cond2) then return false end
 
+   -- print("[D] toe 1")
+
    -- Any section besides one of type SHT_NOBITS must have file
    -- offsets within the segment.
    local cond3 = ( sectype == STYPE.SHT_NOBITS or
 		   ( secoff >= segoff and
 		     ( (not strict) or secoff - segoff <= segfsize - 1) and
 		  ( secoff - segoff + elf_section_size(scn, seg) <= segfsize)))
+   local c1 = sectype == STYPE.SHT_NOBITS
+   local c2 = secoff >= segoff
+   local c3 = not strict
+   local c4 = secoff - segoff <= segfsize - 1
+   local c5 = secoff - segoff + elf_section_size(scn, seg) <= segfsize
+   local _cond3 = c1 or (c2 and (c3 or c4) and c5)
+
+   if not cond3 or _cond3 then
+      print ("c1 c2 c3 c4 c5 cond3 _cond3")
+      print (c1, c2, c3, c4, c5, cond3, _cond3)
+   end
 	       
-   if not cond3 then return false end   
+   if not cond3 then return false end
       
+   -- print("[D] toe 2")
 
    -- SHF_ALLOC sections must have VMAs within the segment.
    local cond4 = ( (not check_vma) or
 		   (bit.band(secflags, SH_FLAGS.SHF_ALLOC) == 0) or
 		   (secaddr >= segaddr and
 		      ((not strict) or secaddr - segaddr <= segmsize - 1) and
-		      (secaddr - segaddr + slf_section_size(scn, seg) <= segmsize)) )
+		      (secaddr - segaddr + elf_section_size(scn, seg) <= segmsize)) )
 		 
    if not cond4 then return false end
+   -- print("[D] toe 3")
 
    -- No zero size sections at start or end of PT_DYNAMIC.
    local cond5 = (segtype ~= PTYPE.PT_DYNAMIC or 
@@ -235,10 +262,44 @@ function scn_in_seg(scn, seg)
 
    if not cond5 then return false end
 
+   -- print("[D] toe 4")
+
    return true
 end
 
-load_scns()
-load_segs()
+local scns = load_scns()
+local segs = load_segs()
+
+for i=0, libshdr.get_seg_num()-1 do
+   io.write(string.format("%d: ", i+1))
+   for j=0, libshdr.get_scn_num()-1 do
+      if tonumber(libshdr.sec_in_seg_strict(j, i)) == 1 then
+	 io.write(string.format("%d, ", j+1))
+      end
+   end
+   print("")
+end
+
+-- for i, seg in ipairs(segs) do
+--    print(string.format("in %3x %08x %08x %08x %08x %08x %3x %x", 
+-- 		       tonumber(seg.p_idx),
+-- 		       tonumber(seg.p_offset),
+-- 		       tonumber(seg.p_vaddr),
+-- 		       tonumber(seg.p_paddr),
+-- 		       tonumber(seg.p_filesz),
+-- 		       tonumber(seg.p_memsz),
+-- 		       tonumber(seg.p_flags),
+-- 		       tonumber(seg.p_align)
+-- 		 ))
+
+--    for j, scn in ipairs(scns) do
+--       if scn_in_seg(scn, seg) then
+-- 	 print(string.format('scn %d, %s size 0x%x', 
+-- 			     j, 
+-- 			     tostring(scn.name), 
+-- 			     tonumber(scn.sh_size)))	 
+--       end
+--    end
+-- end
 
 

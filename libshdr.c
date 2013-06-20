@@ -26,6 +26,7 @@ static struct {
 	size_t shstrndx;
 	Elf_Scn** scns;
 	GElf_Phdr* phdrs;
+	GElf_Shdr* shdrs;
 } g;
 
 static int init_phdrs()
@@ -60,25 +61,28 @@ static int init_scns()
 
 	int i = 0;
 	GElf_Shdr shdr;
-	Elf_Scn** buf = (Elf_Scn**)malloc(shdrnum * sizeof(Elf_Scn*));
+	Elf_Scn** buf   = (Elf_Scn**)malloc(shdrnum * sizeof(Elf_Scn*));
+	GElf_Shdr* buf2 = (GElf_Shdr*)malloc(shdrnum * sizeof(GElf_Shdr));
+
 	if (buf == NULL) {
 		errx (EXIT_FAILURE , "malloc failed");
 		return -1;
 	}
 	Elf_Scn *scn = NULL;
 	while ((scn = elf_nextscn(e, scn)) != NULL && i < shdrnum) {
-		// FIXME seems this step is unnecessary? 
 		if (gelf_getshdr (scn , & shdr ) != & shdr) {
 			errx ( EXIT_FAILURE , " getshdr ()  failed : %s.",
 			       elf_errmsg ( -1));
 			free(buf);
 			return -1;
 		}
-		buf[i] = scn;
+		buf[i]  = scn;
+		buf2[i] = shdr;
 		i++;
 	}
 
-	g.scns = buf;
+	g.scns  = buf;
+	g.shdrs = buf2;
 	
 	return 0;
 }
@@ -284,4 +288,13 @@ scn_hdr_t* get_scn_hdr(int idx)
 	scn_hdr_p->data = buf;
 
 	return scn_hdr_p;
+}
+
+
+int sec_in_seg_strict(int sec_hdr_idx, int seg_hdr_idx)
+{
+	GElf_Shdr shdr = g.shdrs[sec_hdr_idx];
+	GElf_Phdr phdr = g.phdrs[seg_hdr_idx];
+
+	return ELF_SECTION_IN_SEGMENT_STRICT(&shdr, &phdr);
 }
