@@ -46,22 +46,22 @@ ffi.cdef[[
 
 ffi.load('elf', true)
 ffi.load('bsd', true)
-libshdr = ffi.load('./libshdr.so')
+elfconn = ffi.load('./libelfconn.so')
 
 function init_elf(fname)
-   libshdr.init(fname)
+   elfconn.init(fname)
 end
 
 function load_scns()
 
    local fname = ffi.new(string.format("char[%d]", string.len(arg[1])+1), arg[1])
-   libshdr.init(fname)
+   elfconn.init(fname)
 
-   local n = tonumber(libshdr.get_scn_num())
+   local n = tonumber(elfconn.get_scn_num())
    local scns = {}
    print("Index name addr size")
    for idx=0, n-1 do
-      local scn_hdr = libshdr.get_scn_hdr(idx)
+      local scn_hdr = elfconn.get_scn_hdr(idx)
       scns[#scns + 1] = scn_hdr
       print(string.format('%d     %s 0x%x 0x%x', 
       			  idx,
@@ -83,12 +83,12 @@ function load_scns()
 end
 
 function load_segs()
-   local n = libshdr.get_seg_num()
+   local n = elfconn.get_seg_num()
    local segs = {}
    print("segments:")
    print("idx   offset  virtual physical filesize  memsize Flg Align")
    for i=0, n-1 do
-      local ph = libshdr.get_prog_hdr(i)
+      local ph = elfconn.get_prog_hdr(i)
       segs[#segs+1] = ph
       print(string.format("%3x %08x %08x %08x %08x %08x %3x %x", 
 			  tonumber(ph.p_idx),
@@ -272,10 +272,10 @@ end
 local scns = load_scns()
 local segs = load_segs()
 
-for i=0, libshdr.get_seg_num()-1 do
+for i=0, elfconn.get_seg_num()-1 do
    io.write(string.format("%d: ", i))
-   for j=0, libshdr.get_scn_num()-1 do
-      if tonumber(libshdr.sec_in_seg_strict(j, i)) == 1 then
+   for j=0, elfconn.get_scn_num()-1 do
+      if tonumber(elfconn.sec_in_seg_strict(j, i)) == 1 then
 	 io.write(string.format("%d, ", j))
       end
    end

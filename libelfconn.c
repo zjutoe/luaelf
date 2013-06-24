@@ -15,7 +15,7 @@
 #include <bsd/vis.h>
 #include <string.h>
 
-#include "libshdr.h"
+#include "libelfconn.h"
 
 static struct {
 	int fd;
