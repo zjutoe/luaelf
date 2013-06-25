@@ -11,5 +11,5 @@ $ ./build.sh
 Run
 ---
 
-$ luajit loadelf.lua <elf-file-name>
+$ luajit loadelf.lua [elf-file-name]
 
