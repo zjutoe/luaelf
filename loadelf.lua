@@ -68,9 +68,10 @@ function load_scns()
       			  ffi.string(scn_hdr.name), 
 			  tonumber(scn_hdr.sh_addr),
       			  tonumber(scn_hdr.sh_size)))
-      local sz = tonumber(scn_hdr.sh_size)
+
+      -- local sz = tonumber(scn_hdr.sh_size)
       -- for i=0, sz-1 do 
-      -- 	 if i % 16 == 0 then
+      -- 	 if i % 16 == 0 then	    
       -- 	    io.write("\n")
       -- 	 end
       -- 	 io.write(string.format("%02x ", tonumber(scn_hdr.data[i])))
@@ -281,27 +282,4 @@ for i=0, elfconn.get_seg_num()-1 do
    end
    print("")
 end
-
--- for i, seg in ipairs(segs) do
---    print(string.format("in %3x %08x %08x %08x %08x %08x %3x %x", 
--- 		       tonumber(seg.p_idx),
--- 		       tonumber(seg.p_offset),
--- 		       tonumber(seg.p_vaddr),
--- 		       tonumber(seg.p_paddr),
--- 		       tonumber(seg.p_filesz),
--- 		       tonumber(seg.p_memsz),
--- 		       tonumber(seg.p_flags),
--- 		       tonumber(seg.p_align)
--- 		 ))
-
---    for j, scn in ipairs(scns) do
---       if scn_in_seg(scn, seg) then
--- 	 print(string.format('scn %d, %s size 0x%x', 
--- 			     j, 
--- 			     tostring(scn.name), 
--- 			     tonumber(scn.sh_size)))	 
---       end
---    end
--- end
-
 
