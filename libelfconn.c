@@ -220,7 +220,7 @@ size_t get_scn_size(int idx)
 	Elf_Scn* scn = g.scns[idx];
 	GElf_Shdr shdr;
 	if ( gelf_getshdr (scn , & shdr ) != & shdr ) {
-		errx ( EXIT_FAILURE , " getshdr ( shstrndx )  failed : %s.",
+		errx ( EXIT_FAILURE , " gelf_getshdr ()  failed : %s.",
 		       elf_errmsg ( -1));
 		return -1;
 	}
