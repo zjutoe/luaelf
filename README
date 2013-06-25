@@ -1,1 +1,13 @@
-This is a ELF loader written in Lua, with the help of libelf.
+This is a ELF loader written in Lua, with the help of libelf
+============================================================
+
+Build
+-----
+
+$ ./build.sh
+
+Run
+===
+
+$ luajit loadelf.lua <elf-file-name>
+
