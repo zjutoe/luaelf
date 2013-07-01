@@ -46,7 +46,7 @@ ffi.cdef[[
 
 ffi.load('elf', true)
 ffi.load('bsd', true)
-elfconn = ffi.load('./libelfconn.so')
+local elfconn = ffi.load('./libelfconn.so')
 
 function init_elf(fname)
    elfconn.init(fname)
@@ -270,16 +270,41 @@ function scn_in_seg(scn, seg)
    return true
 end
 
-local scns = load_scns()
-local segs = load_segs()
+local function load_scn_mem(mem, scn_hdr)
+   -- local scn_name = ffi.string(scn_hdr.name)
+   local scn_addr = tonumber(scn_hdr.sh_addr)
+   local sz = tonumber(scn_hdr.sh_size)
 
-for i=0, elfconn.get_seg_num()-1 do
-   io.write(string.format("%d: ", i))
-   for j=0, elfconn.get_scn_num()-1 do
-      if tonumber(elfconn.sec_in_seg_strict(j, i)) == 1 then
-	 io.write(string.format("%d, ", j))
-      end
+   for i=0, sz-1 do 
+      mem[scn_addr+i] = tonumber(scn_hdr.data[i])
    end
-   print("")
+
+   return mem
 end
 
+local function _main_()
+   local scns = load_scns()
+   local segs = load_segs()
+   local mem = {}
+
+   for i=0, elfconn.get_seg_num()-1 do
+      -- io.write(string.format("%d: ", i))
+      for j=0, elfconn.get_scn_num()-1 do
+	 local segtype = tonumber(segs[i+1].p_type)
+	 if segtype == PTYPE.PT_LOAD and tonumber(elfconn.sec_in_seg_strict(j, i)) == 1 then
+	    -- io.write(string.format("%d, ", j))
+	    load_scn_mem(mem, scns[j+1])
+	 end
+      end
+      -- print("")
+   end
+
+   return mem
+end
+
+local mem = _main_()
+for k, v in pairs(mem) do
+   if k % 128 == 0 then io.write(string.format('\n%x: ', k))
+   io.write(string.format('%x ', v))
+   end
+end
