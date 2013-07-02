@@ -1,6 +1,10 @@
 local ffi = require 'ffi'
+local pairs = pairs
+local string = string
+local tonumber = tonumber
+local print = print
 
--- TODO shall we distinguish 32 bit and 64 bit machines?
+module(...)
 
 ffi.cdef[[
 
@@ -43,19 +47,28 @@ ffi.cdef[[
 
 ]]
 
+local _m = {}
+
+function init()
+   local m = {}
+   for k, v in pairs(_m) do
+      m[k] = v
+   end
+   return m   
+end
 
 ffi.load('elf', true)
 ffi.load('bsd', true)
 local elfconn = ffi.load('./libelfconn.so')
 
 function init_elf(fname)
-   elfconn.init(fname)
+   elfconn.init(ffi.new("char[?]", string.len(fname), fname))
 end
 
 function load_scns()
 
-   local fname = ffi.new(string.format("char[%d]", string.len(arg[1])+1), arg[1])
-   elfconn.init(fname)
+--   local fname = ffi.new(string.format("char[%d]", string.len(arg[1])+1), arg[1])
+--   elfconn.init(fname)
 
    local n = tonumber(elfconn.get_scn_num())
    local scns = {}
@@ -190,6 +203,9 @@ function elf_section_size(scn, seg)
    return scn.sh_size
 end
 
+
+-- TODO should remove this implementation since we are using the C
+-- version
 function scn_in_seg(scn, seg)
    local strict    = true
    local check_vma = true
@@ -270,7 +286,7 @@ function scn_in_seg(scn, seg)
    return true
 end
 
-local function load_scn_mem(mem, scn_hdr)
+function load_scn_mem(mem, scn_hdr)
    -- local scn_name = ffi.string(scn_hdr.name)
    local scn_addr = tonumber(scn_hdr.sh_addr)
    local sz = tonumber(scn_hdr.sh_size)
@@ -282,7 +298,10 @@ local function load_scn_mem(mem, scn_hdr)
    return mem
 end
 
-local function _main_()
+function _m.load(fname)
+
+   init_elf(fname)
+   
    local scns = load_scns()
    local segs = load_segs()
    local mem = {}
@@ -302,9 +321,3 @@ local function _main_()
    return mem
 end
 
-local mem = _main_()
-for k, v in pairs(mem) do
-   if k % 128 == 0 then io.write(string.format('\n%x: ', k))
-   io.write(string.format('%x ', v))
-   end
-end
