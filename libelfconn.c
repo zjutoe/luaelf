@@ -251,17 +251,17 @@ prog_hdr_t* get_prog_hdr(int idx)
 scn_hdr_t* get_scn_hdr(int idx)
 {
 	Elf_Scn* scn = g.scns[idx];
+	GElf_Shdr shdr = g.shdrs[idx];
 
 	Elf_Data* data;
 	size_t n;
-
-	GElf_Shdr shdr;
-	if ( gelf_getshdr(scn , &shdr) != &shdr ) {
-		errx ( EXIT_FAILURE,
-		       " getshdr( shstrndx ) failed : %s.",
-		       elf_errmsg ( -1));
-		return NULL;
-	}
+	
+	// if ( gelf_getshdr(scn , &shdr) != &shdr ) {
+	// 	errx ( EXIT_FAILURE,
+	// 	       " getshdr( shstrndx ) failed : %s.",
+	// 	       elf_errmsg ( -1));
+	// 	return NULL;
+	// }
 
 	// data = NULL; size_t buf_sz = 0;
 	// while ((data=elf_getdata(scn, data)) != NULL) {

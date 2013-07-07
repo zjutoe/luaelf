@@ -305,6 +305,7 @@ function _m.load(fname)
    local scns = load_scns()
    local segs = load_segs()
    local mem = {}
+   mem.scns = scns
 
    for i=0, elfconn.get_seg_num()-1 do
       -- io.write(string.format("%d: ", i))
