@@ -59,7 +59,7 @@ end
 
 ffi.load('elf', true)
 ffi.load('bsd', true)
-local elfconn = ffi.load('./libelfconn.so')
+local elfconn = ffi.load('elfconn')
 
 function init_elf(fname)
    elfconn.init(ffi.new("char[?]", string.len(fname), fname))
