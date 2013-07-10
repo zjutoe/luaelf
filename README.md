@@ -1,7 +1,7 @@
 luaelf
 ======
 
-elf loader writting in Lua, with the help of libelf
+elf loader written in Lua, with the help of libelf
 
 Build
 -----
