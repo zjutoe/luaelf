@@ -215,6 +215,11 @@ int get_seg_num()
 	return g.phdrnum;
 }
 
+size_t get_e_entry()
+{
+	return g.ehdr.e_entry;
+}
+
 size_t get_scn_size(int idx)
 {
 	Elf_Scn* scn = g.scns[idx];

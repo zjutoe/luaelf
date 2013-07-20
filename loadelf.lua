@@ -40,6 +40,7 @@ ffi.cdef[[
       void fini();
       int get_scn_num();
       int get_seg_num();
+      size_t get_e_entry();
       size_t get_scn_size(int idx);
       scn_hdr_t* get_scn_hdr(int idx);
       prog_hdr_t* get_prog_hdr(int idx);
@@ -306,6 +307,7 @@ function _m.load(fname)
    local segs = load_segs()
    local mem = {}
    mem.scns = scns
+   mem.e_entry = tonumber(elfconn.get_e_entry())
 
    for i=0, elfconn.get_seg_num()-1 do
       -- io.write(string.format("%d: ", i))
@@ -322,3 +324,6 @@ function _m.load(fname)
    return mem
 end
 
+function _m.get_e_entry()
+   
+end
