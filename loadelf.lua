@@ -73,15 +73,17 @@ function load_scns()
 
    local n = tonumber(elfconn.get_scn_num())
    local scns = {}
-   print("Index name addr size")
+   -- DEBUG
+   -- print("Index name addr size")
    for idx=0, n-1 do
       local scn_hdr = elfconn.get_scn_hdr(idx)
       scns[#scns + 1] = scn_hdr
-      print(string.format('%d     %s 0x%x 0x%x', 
-      			  idx,
-      			  ffi.string(scn_hdr.name), 
-			  tonumber(scn_hdr.sh_addr),
-      			  tonumber(scn_hdr.sh_size)))
+      -- DEBUG
+      -- print(string.format('%d     %s 0x%x 0x%x', 
+      -- 			  idx,
+      -- 			  ffi.string(scn_hdr.name), 
+      -- 			  tonumber(scn_hdr.sh_addr),
+      -- 			  tonumber(scn_hdr.sh_size)))
 
       -- local sz = tonumber(scn_hdr.sh_size)
       -- for i=0, sz-1 do 
@@ -100,21 +102,23 @@ end
 function load_segs()
    local n = elfconn.get_seg_num()
    local segs = {}
-   print("segments:")
-   print("idx   offset  virtual physical filesize  memsize Flg Align")
+   -- DEBUG
+   --print("segments:")
+   --print("idx   offset  virtual physical filesize  memsize Flg Align")
    for i=0, n-1 do
       local ph = elfconn.get_prog_hdr(i)
       segs[#segs+1] = ph
-      print(string.format("%3x %08x %08x %08x %08x %08x %3x %x", 
-			  tonumber(ph.p_idx),
-			  tonumber(ph.p_offset),
-			  tonumber(ph.p_vaddr),
-			  tonumber(ph.p_paddr),
-			  tonumber(ph.p_filesz),
-			  tonumber(ph.p_memsz),
-			  tonumber(ph.p_flags),
-			  tonumber(ph.p_align)
-		    ))
+      -- DEBUG
+      -- print(string.format("%3x %08x %08x %08x %08x %08x %3x %x", 
+      -- 			  tonumber(ph.p_idx),
+      -- 			  tonumber(ph.p_offset),
+      -- 			  tonumber(ph.p_vaddr),
+      -- 			  tonumber(ph.p_paddr),
+      -- 			  tonumber(ph.p_filesz),
+      -- 			  tonumber(ph.p_memsz),
+      -- 			  tonumber(ph.p_flags),
+      -- 			  tonumber(ph.p_align)
+      -- 		    ))
    end
 
    return segs
